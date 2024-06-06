@@ -36,6 +36,9 @@ class SessionRouter extends Router {
         this.get('/githubcallback', passport.authenticate('github', { failureRedirect: '/login' }), withController((controller, req, res) => controller.githubcallback(req, res))) 
 
         this.get('/current', withController((controller, req, res) => controller.current(req, res)))        
+
+        this.get('/mockingusers', withController((controller, req, res) => controller.mockingUsers(req, res)))    
+
     }
 }
 

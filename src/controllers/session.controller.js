@@ -1,4 +1,5 @@
 const { UserDTO } = require("../dao/DTOs/user.dto")
+const { generateUser } = require("../mock/generateUser")
 
 class SessionController {
 
@@ -58,6 +59,14 @@ class SessionController {
             req.session.user = new UserDTO(req.user)
             //req.session.user = { _id: req.user._id, first_name: req.user.first_name, last_name: req.user.last_name, age: req.user.age, email: req.user.email, rol: req.user.rol, cart: req.user.cart }
             res.redirect('/profile')
+    }
+
+    mockingUsers (req, res) {
+        const users = []
+        for (let i = 0; i < 100; i++) {
+            users.push(generateUser())
+        }
+        res.json(users)
     }
 }
 
