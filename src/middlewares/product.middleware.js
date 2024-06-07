@@ -25,14 +25,14 @@ const soloNumPositivosYcero = (code) => {
 // Middleware para validacion de datos al agregar un producto 
 const validarNuevoProducto = async (req, res, next) => {
     const product = req.body
-    title = product.title,
-    description = product.description,
-    price = product.price,
-    thumbnail = product.thumbnail,
-    code = product.code,
-    stock = product.stock,
-    status = product.status,
-    category = product.category
+    const title = product.title
+    const description = product.description
+    const price = product.price
+    const thumbnail = product.thumbnail
+    const code = product.code
+    const stock = product.stock
+    const status = product.status
+    const category = product.category
 
     CustomError.createError({
         name: 'Valores incompletos en la incorporacion de un producto',
