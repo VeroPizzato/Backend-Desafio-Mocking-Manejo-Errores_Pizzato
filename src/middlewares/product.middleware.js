@@ -40,88 +40,82 @@ const validarNuevoProducto = async (req, res, next) => {
     const status = product.status
     const category = product.category
 
-    CustomError.createError({
-        name: 'Valores incompletos en la incorporacion de un producto',
-        cause: generateProductErrorInfo({
-            title,
-            description,
-            price,
-            category,
-            status,
-            thumbnail,
-            code,
-            stock
-        }),
-        message: 'Falta ingresar alguno de los campos del producto ', 
-        code: ErrorCodes.INVALID_TYPES_ERROR
-    });
+    try {
 
-    next()
+        if (!product.title || !product.description || !product.price || !product.code || !product.stock || !product.category) {
+            //return res.status(400).json({ error: 'Todos los campos son obligatorios, salvo la ruta de la imagen' })  
+            CustomError.createError({
+                name: 'Valores incompletos en la incorporacion de un producto',
+                cause: generateProductErrorInfo({
+                    title,
+                    description,
+                    price,
+                    category,
+                    status,
+                    thumbnail,
+                    code,
+                    stock
+                }),
+                message: 'Falta ingresar alguno de los campos del producto ',
+                code: ErrorCodes.INVALID_TYPES_ERROR
+            })
+        }
+        if (isNaN(product.price) || isNaN(product.stock)) {
+            res.status(400).json({ error: "Invalid number format" })
+            return
+        }
+        if (!soloNumPositivos(product.price)) {
+            res.status(400).json({ error: "Precio negativo" })
+            return
+        }
+        if (!soloNumPositivosYcero(product.stock)) {
+            res.status(400).json({ error: "Stock negativo" })
+            return
+        }
+        if (!Array.isArray(product.thumbnail)) {
+            res.status(400).json({ error: "El campo thumbnail es invalido." })
+            return
+        }
+        else {
+            let rutasValidas = true
+            product.thumbnail.forEach(ruta => {
+                if (typeof ruta != "string") {
+                    rutasValidas = false
+                    return
+                }
+            })
+            if (!rutasValidas) {
+                res.status(400).json({ error: "El campo thumbnail es invalido." })
+                return
+            }
+        }
+        const listadoProductos = await productsService.getProducts(req.query)
+        const codeIndex = listadoProductos.docs.findIndex(e => e.code === product.code)
+        if (codeIndex !== -1) {
+            res.status(400).json({ error: "Codigo ya existente" })
+            return
+        }
+        if (!soloNumYletras(product.code)) {
+            res.status(400).json({ error: "El campo codigo identificador es invalido." })
+            return
+        }
 
-    // try {       
-    //     const product = req.body
-    //     product.price = +product.price
-    //     product.stock = +product.stock
-    //     product.thumbnail = [product.thumbnail]
-    //     var boolStatus = JSON.parse(product.status)
-
-    //     if (!product.title || !product.description || !product.price || !product.code || !product.stock || !product.category) {
-    //         return res.status(400).json({ error: 'Todos los campos son obligatorios, salvo la ruta de la imagen' })           
-    //     }
-    //     if (isNaN(product.price) || isNaN(product.stock)) {
-    //         res.status(400).json({ error: "Invalid number format" })
-    //         return
-    //     }
-    //     if (!soloNumPositivos(product.price)) {
-    //         res.status(400).json({ error: "Precio negativo" })
-    //         return
-    //     }
-    //     if (!soloNumPositivosYcero(product.stock)) {
-    //         res.status(400).json({ error: "Stock negativo" })
-    //         return
-    //     }
-    //     if (!Array.isArray(product.thumbnail)) {
-    //         res.status(400).json({ error: "El campo thumbnail es invalido." })
-    //         return
-    //     }
-    //     else {
-    //         let rutasValidas = true
-    //         product.thumbnail.forEach(ruta => {
-    //             if (typeof ruta != "string") {
-    //                 rutasValidas = false
-    //                 return
-    //             }
-    //         })
-    //         if (!rutasValidas) {
-    //             res.status(400).json({ error: "El campo thumbnail es invalido." })
-    //             return
-    //         }
-    //     }
-    //     const listadoProductos = await productsService.getProducts(req.query)
-    //     const codeIndex = listadoProductos.docs.findIndex(e => e.code === product.code)
-    //     if (codeIndex !== -1) {
-    //         res.status(400).json({ error: "Codigo ya existente" })
-    //         return
-    //     }
-    //     if (!soloNumYletras(product.code)) {
-    //         res.status(400).json({ error: "El campo codigo identificador es invalido." })
-    //         return
-    //     }
-    //     if (typeof boolStatus != "boolean") {
-    //         res.status(400).json({ error: "El campo status es invalido." })
-    //         return
-    //     }
-    //     next()
-    // }
-    // catch {
-    //     return res.status(400).json({ error: "Producto nuevo invalido." })
-    // }
+        var boolStatus = product.status
+        if (typeof boolStatus != "boolean") {
+            res.status(400).json({ error: "El campo status es invalido." })
+            return
+        }
+        next()
+    }
+    catch {
+        return res.status(400).json({ error: "Producto nuevo invalido." })
+    }
 }
 
 // Middleware para validacion de datos al actualizar un producto 
 // Si algun dato es vacio no se actualiza
 const validarProdActualizado = async (req, res, next) => {
-    try {        
+    try {
         const { title, description, price, thumbnail, code, stock, status, category } = req.body
         let idProd = req.params.pid
 
@@ -188,7 +182,7 @@ const validarProdActualizado = async (req, res, next) => {
 
 // Middleware para validacion de datos de un producto 
 const validarProductoExistente = async (req, res, next) => {
-    try {       
+    try {
         let prodId = req.params.pid
         // if (isNaN(prodId)) {
         //     res.status(400).json({ error: "Formato invalido." })
