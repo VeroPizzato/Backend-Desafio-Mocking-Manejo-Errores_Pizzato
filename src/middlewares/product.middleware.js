@@ -134,19 +134,18 @@ const validarNuevoProducto = async (req, res, next) => {
 // Middleware para validacion de datos al actualizar un producto 
 // Si algun dato es vacio no se actualiza
 const validarProdActualizado = async (req, res, next) => {
-    try {
-        const idProd = req.params.pid
-        const product = req.body
+    const idProd = req.params.pid
+    const product = req.body
 
-        const title = product.title
-        const description = product.description
-        const price = product.price
-        const thumbnail = product.thumbnail
-        const code = product.code
-        const stock = product.stock
-        const status = product.status
-        const category = product.category
-      
+    const title = product.title
+    const description = product.description
+    const price = product.price
+    const thumbnail = product.thumbnail
+    const code = product.code
+    const stock = product.stock
+    const status = product.status
+    const category = product.category
+    try {     
         const prod = await productsService.getProductById(idProd)    
         if (!prod){
             throw CustomError.createError({
@@ -168,8 +167,8 @@ const validarProdActualizado = async (req, res, next) => {
                     message: 'Error trying to create a new product',
                     code: ErrorCodes.INVALID_TYPES_ERROR
                 })
-            } 
-                    
+            }              
+           
             next()
         }   
         throw CustomError.createError({
