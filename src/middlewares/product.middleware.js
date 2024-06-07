@@ -25,6 +25,12 @@ const soloNumPositivosYcero = (code) => {
 // Middleware para validacion de datos al agregar un producto 
 const validarNuevoProducto = async (req, res, next) => {
     const product = req.body
+
+    product.price = +product.price
+    product.stock = +product.stock
+    product.thumbnail = [product.thumbnail]
+    product.status = JSON.parse(product.status)
+
     const title = product.title
     const description = product.description
     const price = product.price
