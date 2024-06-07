@@ -5,7 +5,7 @@ class CustomError {
         error.name = name;
         error.code = code;
         error.cause = cause;
-        throw error;
+        return error;
     }
 }
 

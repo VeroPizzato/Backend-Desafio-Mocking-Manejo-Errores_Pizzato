@@ -17,7 +17,7 @@ const errorHandler = (error, req, res, next) => {
             break;
     }
 
-    next()
+    next(error)
 }
 
 module.exports = { errorHandler}

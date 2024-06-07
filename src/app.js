@@ -6,6 +6,8 @@ const session = require('express-session')
 const MongoStore = require('connect-mongo')
 const cookieParser = require('cookie-parser')
 const config = require('./config/config')
+const { Product: ProductDAO } = require('./dao')
+const { ProductsService } = require('./services/products.service')
 
 const CartsRouter = require('./routes/carts.router')
 const cartsRouter = new CartsRouter().getRouter()
@@ -136,11 +138,13 @@ const main = async () => {
         // Escucho el evento 'deleteProduct' emitido por el cliente
         clientSocket.on('deleteProduct', async (productId) => {
             try {
-                await ProductManager.deleteProduct(productId);
+                const productsService = new ProductsService(new ProductDAO())
+                await productsService.deleteProduct(productId)
+                //await ProductManager.deleteProduct(productId)
                 // Emitir evento 'productDeleted' a los clientes
-                io.emit('productDeleted', productId);
+                io.emit('productDeleted', productId)
             } catch (error) {
-                console.error('Error deleting product:', error);
+                console.error('Error deleting product:', error)
             }
         })
 

@@ -22,10 +22,48 @@ const soloNumPositivosYcero = (code) => {
     return (/^[0-9]+$/.test(code) && (code >= 0))
 }
 
+const validarDatos = (title, description, price, thumbnail, code, stock, status, category) => {
+    if (!title || !description || !price || !thumbnail || !code || !stock || !status || !category) {
+        return false
+    }
+    if (isNaN(price) || isNaN(stock)) {
+        return false
+    }
+    if (!soloNumPositivos(price)) {
+        return false
+    }
+    if (!soloNumPositivosYcero(stock)) {
+        return false
+    }
+    if (!Array.isArray(thumbnail)) {
+        return false
+    }
+    else {
+        let rutasValidas = true
+        thumbnail.forEach(ruta => {
+            if (typeof ruta != "string") {
+                rutasValidas = false
+                return
+            }
+        })
+        if (!rutasValidas) {
+            return false
+        }
+    }
+    if (!soloNumYletras(code)) {
+        return false
+    }
+    var boolStatus = status
+    if (typeof boolStatus != "boolean") {
+        return false
+    }
+
+    return true
+}
+
 // Middleware para validacion de datos al agregar un producto 
 const validarNuevoProducto = async (req, res, next) => {
     const product = req.body
-
     product.price = +product.price
     product.stock = +product.stock
     product.thumbnail = [product.thumbnail]
@@ -41,74 +79,55 @@ const validarNuevoProducto = async (req, res, next) => {
     const category = product.category
 
     try {
-
-        if (!product.title || !product.description || !product.price || !product.code || !product.stock || !product.category) {
-            //return res.status(400).json({ error: 'Todos los campos son obligatorios, salvo la ruta de la imagen' })  
-            CustomError.createError({
-                name: 'Valores incompletos en la incorporacion de un producto',
-                cause: generateProductErrorInfo({
-                    title,
-                    description,
-                    price,
-                    category,
-                    status,
-                    thumbnail,
-                    code,
-                    stock
-                }),
-                message: 'Falta ingresar alguno de los campos del producto ',
-                code: ErrorCodes.INVALID_TYPES_ERROR
-            })
-        }
-        if (isNaN(product.price) || isNaN(product.stock)) {
-            res.status(400).json({ error: "Invalid number format" })
-            return
-        }
-        if (!soloNumPositivos(product.price)) {
-            res.status(400).json({ error: "Precio negativo" })
-            return
-        }
-        if (!soloNumPositivosYcero(product.stock)) {
-            res.status(400).json({ error: "Stock negativo" })
-            return
-        }
-        if (!Array.isArray(product.thumbnail)) {
-            res.status(400).json({ error: "El campo thumbnail es invalido." })
-            return
-        }
-        else {
-            let rutasValidas = true
-            product.thumbnail.forEach(ruta => {
-                if (typeof ruta != "string") {
-                    rutasValidas = false
-                    return
-                }
-            })
-            if (!rutasValidas) {
-                res.status(400).json({ error: "El campo thumbnail es invalido." })
-                return
+        if (validarDatos(title, description, price, thumbnail, code, stock, status, category)) {
+            const listadoProductos = await productsService.getProducts(req.query)
+            const codeIndex = listadoProductos.docs.findIndex(e => e.code === code)
+            if (codeIndex !== -1) {
+                // res.status(400).json({ error: "Codigo ya existente" })
+                // return
+                throw CustomError.createError({
+                    name: 'InvalidProductData',
+                    cause: `No se puede crear el producto con código '${code}' porque dicho codigo ya existe.`,
+                    message: 'Error trying to create a new product',
+                    code: ErrorCodes.INVALID_TYPES_ERROR
+                })
             }
-        }
-        const listadoProductos = await productsService.getProducts(req.query)
-        const codeIndex = listadoProductos.docs.findIndex(e => e.code === product.code)
-        if (codeIndex !== -1) {
-            res.status(400).json({ error: "Codigo ya existente" })
-            return
-        }
-        if (!soloNumYletras(product.code)) {
-            res.status(400).json({ error: "El campo codigo identificador es invalido." })
-            return
+            return next()
         }
 
-        var boolStatus = product.status
-        if (typeof boolStatus != "boolean") {
-            res.status(400).json({ error: "El campo status es invalido." })
-            return
-        }
-        next()
+        throw CustomError.createError({
+            name: 'InvalidProductData',
+            cause: generateProductErrorInfo({
+                title,
+                description,
+                price,
+                category,
+                status,
+                thumbnail,
+                code,
+                stock
+            }),
+            message: 'Error trying to create a new product',
+            code: ErrorCodes.INVALID_TYPES_ERROR
+        })
     }
     catch {
-        return res.status(400).json({ error: "Producto nuevo invalido." })
+        //return res.status(400).json({ error: "Producto nuevo invalido." })
+        throw CustomError.createError({
+            name: 'InvalidProductData',
+            cause: generateProductErrorInfo({
+                title,
+                description,
+                price,
+                category,
+                status,
+                thumbnail,
+                code,
+                stock
+            }),
+            message: 'Error trying to create a new product',
+            code: ErrorCodes.INVALID_TYPES_ERROR
+        })
     }
 }
 
@@ -116,8 +135,17 @@ const validarNuevoProducto = async (req, res, next) => {
 // Si algun dato es vacio no se actualiza
 const validarProdActualizado = async (req, res, next) => {
     try {
-        const { title, description, price, thumbnail, code, stock, status, category } = req.body
-        let idProd = req.params.pid
+        const idProd = req.params.pid
+        const product = req.body
+
+        const title = product.title
+        const description = product.description
+        const price = product.price
+        const thumbnail = product.thumbnail
+        const code = product.code
+        const stock = product.stock
+        const status = product.status
+        const category = product.category
 
         const listadoProductos = await productsService.getProducts(req.query)
         const codeIndex = listadoProductos.docs.findIndex(e => e._id.toString() === idProd)
@@ -125,58 +153,54 @@ const validarProdActualizado = async (req, res, next) => {
             res.status(400).json({ error: "Producto con ID:" + idProd + " not Found" })
             return
         }
-        else {
-            if (price !== '') {
-                if (isNaN(price)) {
-                    res.status(400).json({ error: "Error. El campo precio es invalido." })
-                    return
-                }
-                if (!soloNumPositivos(price)) {
-                    res.status(400).json({ error: "Precio negativo" })
-                    return
-                }
-            }
-            if (stock !== '') {
-                if (isNaN(stock)) {
-                    res.status(400).json({ error: "El campo stock es invalido." })
-                    return
-                }
-                if (!soloNumPositivosYcero(stock)) {
-                    res.status(400).json({ error: "Precio negativo" })
-                    return
-                }
-            }
-            if (!Array.isArray(thumbnail)) {
-                res.status(400).json({ error: "El campo thumbnail es invalido." })
-                return
-            }
-            else {
-                let rutasValidas = true
-                thumbnail.forEach(ruta => {
-                    if (typeof ruta != "string") {
-                        rutasValidas = false
-                        return
-                    }
+        if (validarDatos(title, description, price, thumbnail, code, stock, status, category)) {
+            const listadoProductos = await productsService.getProducts(req.query)
+            const codeIndex = listadoProductos.docs.findIndex(e => e.code === code)
+            if (codeIndex !== -1) {
+                // res.status(400).json({ error: "Codigo ya existente" })
+                // return
+                throw CustomError.createError({
+                    name: 'InvalidProductData',
+                    cause: `No se puede actualizar el producto con código '${code}' porque dicho codigo ya existe.`,
+                    message: 'Error trying to create a new product',
+                    code: ErrorCodes.INVALID_TYPES_ERROR
                 })
-                if (!rutasValidas) {
-                    res.status(400).json({ error: "El campo thumbnail es invalido." })
-                    return
-                }
             }
-            if (code !== '') {
-                if (!soloNumYletras(code)) {
-                    res.status(400).json({ error: "El campo codigo identificador es invalido." })
-                    return
-                }
-            }
-            if (typeof status != "boolean") {
-                return res.status(400).json({ error: "El campo status es invalido." })
-            }
+            next()
         }
-        next()
+        throw CustomError.createError({
+            name: 'InvalidProductData',
+            cause: generateProductErrorInfo({
+                title,
+                description,
+                price,
+                category,
+                status,
+                thumbnail,
+                code,
+                stock
+            }),
+            message: 'Error trying to create a new product',
+            code: ErrorCodes.INVALID_TYPES_ERROR
+        })
     }
     catch {
-        return res.status(400).json({ error: "No existe el producto a actualizar." })
+        //return res.status(400).json({ error: "No existe el producto a actualizar." })
+        throw CustomError.createError({
+            name: 'InvalidProductData',
+            cause: generateProductErrorInfo({
+                title,
+                description,
+                price,
+                category,
+                status,
+                thumbnail,
+                code,
+                stock
+            }),
+            message: 'Error trying to create a new product',
+            code: ErrorCodes.INVALID_TYPES_ERROR
+        })
     }
 }
 
