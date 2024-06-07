@@ -55,7 +55,6 @@ class ProductDAO {
         }
     }
   
-
     addProduct = async (title, description, price, thumbnail, code, stock, status, category) => {
         let product = await ProductModel.create({            
             title,
@@ -66,7 +65,7 @@ class ProductDAO {
             stock,
             status,
             category
-        })
+        })        
     }
 
     updateProduct = async (prodId, producto) => {

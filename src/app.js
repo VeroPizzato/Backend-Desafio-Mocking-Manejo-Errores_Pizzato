@@ -27,6 +27,7 @@ const chatModel = require('./dao/mongo/models/chat.model')
 const passport = require('passport')
 
 const initializeStrategy = require('./config/passport.config')
+const { errorHandler } = require('./services/errors/errorHandler')
 
 const app = express()
 
@@ -81,6 +82,8 @@ const main = async () => {
     for (const { path, router } of routers) {
         app.use(path, await router)
     }
+
+    app.use(errorHandler)
 
     await mongoose.connect(config.MONGO_URL,
         {
