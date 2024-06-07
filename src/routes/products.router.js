@@ -21,7 +21,7 @@ class ProductsRouter extends Router {
 
         this.post('/', userIsLoggedIn, userIsAdmin, validarNuevoProducto, withController((controller, req, res) => controller.addProduct(req, res))) 
                 
-        this.put('/:pid', userIsLoggedIn, userIsAdmin, validarProductoExistente, validarProdActualizado, withController((controller, req, res) => controller.updateProduct(req, res)))
+        this.put('/:pid', /*userIsLoggedIn, userIsAdmin,*/ validarProdActualizado, withController((controller, req, res) => controller.updateProduct(req, res)))
 
         this.delete('/:pid', userIsLoggedIn, userIsAdmin, validarProductoExistente, withController((controller, req, res) => controller.deleteProduct(req, res)))  
              

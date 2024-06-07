@@ -1,7 +1,7 @@
 const ProductModel = require("./models/products.model")
 
 class ProductDAO {
-    
+
     getProducts = async (filters) => {
         try {
             let filteredProducts = await ProductModel.find()
@@ -54,9 +54,9 @@ class ProductDAO {
             return null
         }
     }
-  
+
     addProduct = async (title, description, price, thumbnail, code, stock, status, category) => {
-        let product = await ProductModel.create({            
+        let product = await ProductModel.create({
             title,
             description,
             price,
@@ -65,7 +65,7 @@ class ProductDAO {
             stock,
             status,
             category
-        })        
+        })
     }
 
     updateProduct = async (prodId, producto) => {

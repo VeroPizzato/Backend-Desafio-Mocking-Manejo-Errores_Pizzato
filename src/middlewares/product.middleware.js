@@ -146,17 +146,20 @@ const validarProdActualizado = async (req, res, next) => {
         const stock = product.stock
         const status = product.status
         const category = product.category
-
-        const listadoProductos = await productsService.getProducts(req.query)
-        const codeIndex = listadoProductos.docs.findIndex(e => e._id.toString() === idProd)
-        if (codeIndex === -1) {
-            res.status(400).json({ error: "Producto con ID:" + idProd + " not Found" })
-            return
-        }
-        if (validarDatos(title, description, price, thumbnail, code, stock, status, category)) {
-            const listadoProductos = await productsService.getProducts(req.query)
-            const codeIndex = listadoProductos.docs.findIndex(e => e.code === code)
-            if (codeIndex !== -1) {
+      
+        const prod = await productsService.getProductById(idProd)    
+        if (!prod){
+            throw CustomError.createError({
+                name: 'ProductNotFound',
+                cause: `No existe el producto`,
+                message: 'Error trying to get a product',
+                code: ErrorCodes.NOT_FOUND
+            })
+        } 
+        if (validarDatos(title, description, price, thumbnail, code, stock, status, category)) {                       
+            const listadoProductos = await productsService.getProducts(req.query)            
+            const codeIndex = listadoProductos.docs.findIndex(e => {e.code === code && e._id != idProd})                    
+            if (codeIndex !== -1) {                
                 // res.status(400).json({ error: "Codigo ya existente" })
                 // return
                 throw CustomError.createError({
@@ -165,9 +168,10 @@ const validarProdActualizado = async (req, res, next) => {
                     message: 'Error trying to create a new product',
                     code: ErrorCodes.INVALID_TYPES_ERROR
                 })
-            }
+            } 
+                    
             next()
-        }
+        }   
         throw CustomError.createError({
             name: 'InvalidProductData',
             cause: generateProductErrorInfo({
@@ -214,14 +218,26 @@ const validarProductoExistente = async (req, res, next) => {
         // }
         const producto = await productsService.getProductById(prodId)
         if (!producto) {
-            return producto === false
-                ? res.status({ message: 'Not found!' }, 404)
-                : res.status({ message: 'Something went wrong!' })
+            throw CustomError.createError({
+                name: 'ProductNotFound',
+                cause: `No existe el producto`,
+                message: 'Error trying to get a product',
+                code: ErrorCodes.NOT_FOUND
+            })
+            // return producto === false
+            //     ? res.status({ message: 'Not found!' }, 404)                 
+            //     : res.status({ message: 'Something went wrong!' })
         }
         next()
     }
     catch {
-        return res.status(400).json({ error: "No existe el producto." })
+        //return res.status(400).json({ error: "No existe el producto." })
+        throw CustomError.createError({
+            name: 'ProductNotFound',
+            cause: `No existe el producto`,
+            message: 'Error trying to get a product',
+            code: ErrorCodes.NOT_FOUND
+        })
     }
 }
 

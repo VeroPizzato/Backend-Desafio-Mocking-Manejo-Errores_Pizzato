@@ -78,7 +78,7 @@ class ProductsController {
     }
 
     async updateProduct (req, res) {
-        try {
+        try {           
             const prodId = req.pid
             const datosAUpdate = req.body
             // if (isNaN(prodId)){
@@ -90,10 +90,11 @@ class ProductsController {
                 return producto === false
                 ? res.sendNotFoundError({ message: 'Not found!' }, 404)
                 : res.sendServerError({ message: 'Something went wrong!' })
-            }
-            const result = this.service.updateProduct(prodId, datosAUpdate)
-            return res.sendSuccess(result)
+            }        
+            const result = this.service.updateProduct(prodId, datosAUpdate)           
+            //return res.sendSuccess(result)
             //return res.status(200).json(result)
+            return res.sendSuccess(new ProductDTO(datosAUpdate))
         } catch (err) {
             res.sendUserError(err)
             // return res.status(400).json({
