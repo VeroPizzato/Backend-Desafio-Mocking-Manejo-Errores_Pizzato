@@ -13,10 +13,8 @@ const withController = callback => {
 
 class ProductsRouter extends Router {
     init() {        
-        this.get('/', withController((controller, req, res) => controller.getProducts(req, res)))  
-        
-        this.get('/mockingproducts', withController((controller, req, res) => controller.mockingPoducts(req, res))) 
-
+        this.get('/', withController((controller, req, res) => controller.getProducts(req, res)))         
+       
         this.get('/:pid', validarProductoExistente, withController((controller, req, res) => controller.getProductById(req, res)))     
 
         this.post('/', userIsLoggedIn, userIsAdmin, validarNuevoProducto, withController((controller, req, res) => controller.addProduct(req, res))) 

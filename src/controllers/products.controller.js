@@ -1,7 +1,6 @@
 const { ProductsService } = require('../services/products.service')
 const { Product: ProductDAO } = require('../dao')
 const { ProductDTO } = require('../dao/DTOs/product.dto')
-const { generateProduct } = require('../mock/generateProducts')
 
 class ProductsController {
 
@@ -122,14 +121,6 @@ class ProductsController {
             //     message: err.message
             // })
         }
-    }
-
-    mockingPoducts (req, res) {
-        const products = []
-        for (let i = 0; i < 100; i++) {
-            products.push(generateProduct())
-        }
-        res.json(products)
     }
 
 }

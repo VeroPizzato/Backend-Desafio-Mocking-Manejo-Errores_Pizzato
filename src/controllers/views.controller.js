@@ -2,6 +2,7 @@ const { CartsService } = require('../services/carts.service')
 const { ProductsService } = require('../services/products.service')
 const { Product: ProductDAO } = require('../dao')
 const { Cart: CartDAO } = require('../dao')
+const { generateProduct } = require('../mock/generateProducts')
 
 class ViewsController {
 
@@ -272,6 +273,14 @@ class ViewsController {
             return res.sendServerError(err)
             // return res.status(500).json({ message: err.message })
         }
+    }
+
+    mockingPoducts (req, res) {
+        const products = []
+        for (let i = 0; i < 100; i++) {
+            products.push(generateProduct())
+        }
+        res.json(products)
     }
 }
 
